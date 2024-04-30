@@ -12,3 +12,7 @@ def create_room(request):
 def room_detail(request, room_id):
     room = get_object_or_404(Room, room_id=room_id)
     return render(request, 'room_detail.html', {'room': room})
+
+
+def index(request):
+    return render(request, 'index.html', context={'text': 'Hello World'})
