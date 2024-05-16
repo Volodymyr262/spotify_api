@@ -1,51 +1,57 @@
-from channels.generic.websocket import WebsocketConsumer
-from asgiref.sync import async_to_sync
+from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from random import randint
-from time import sleep
-import threading
+import asyncio
+from threading import Thread
 
-class WSConsumer(WebsocketConsumer):
-    def connect(self):
-        self.accept()
-        async_to_sync(self.channel_layer.group_add)("broadcast", self.channel_name)
-        if not hasattr(self.channel_layer, '_broadcast_thread'):
+
+class WSConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        await self.channel_layer.group_add("broadcast", self.channel_name)
+
+        if not hasattr(self.channel_layer, '_broadcast_thread_running'):
+            self.channel_layer._broadcast_thread_running = False
+
+        if not self.channel_layer._broadcast_thread_running:
+            self.channel_layer._broadcast_thread_running = True
             self.start_broadcast()
 
-    def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)("broadcast", self.channel_name)
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard("broadcast", self.channel_name)
 
-    def send_message(self):
-        while True:
+        # Clean up broadcast thread if no one is connected
+        if not await self.is_any_client_connected():
+            self.channel_layer._broadcast_thread_running = False
+
+    async def receive(self, text_data=None, bytes_data=None):
+        pass
+
+    async def broadcast_message(self, event):
+        message = event['message']
+        await self.send(text_data=message)
+
+    def start_broadcast(self):
+        def broadcast_loop():
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(self.send_message())
+            loop.close()
+
+        Thread(target=broadcast_loop, daemon=True).start()
+
+    async def send_message(self):
+        while self.channel_layer._broadcast_thread_running:
             message = json.dumps({'message': randint(1, 100)})
-            async_to_sync(self.channel_layer.group_send)(
+            await self.channel_layer.group_send(
                 "broadcast",
                 {
                     "type": "broadcast.message",
                     "message": message,
                 }
             )
-            sleep(1)
+            await asyncio.sleep(1)
 
-    def receive(self, text_data=None, bytes_data=None):
-        pass
+    async def is_any_client_connected(self):
+        return bool(await self.channel_layer.group_channels("broadcast"))
 
-    def broadcast_message(self, event):
-        message = event['message']
-        self.send(text_data=message)
-
-    def start_broadcast(self):
-        def broadcast_loop():
-            while True:
-                message = json.dumps({'message': randint(1, 100)})
-                async_to_sync(self.channel_layer.group_send)(
-                    "broadcast",
-                    {
-                        "type": "broadcast.message",
-                        "message": message,
-                    }
-                )
-                sleep(1)
-
-        self.channel_layer._broadcast_thread = threading.Thread(target=broadcast_loop)
-        self.channel_layer._broadcast_thread.start()
