@@ -68,6 +68,11 @@ TEMPLATES = [
         },
     },
 ]
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 WSGI_APPLICATION = 'pastebin.wsgi.application'
 
