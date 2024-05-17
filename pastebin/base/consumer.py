@@ -3,7 +3,6 @@ import json
 from threading import Thread
 import asyncio
 
-
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_group_name = 'editor_%s' % self.scope['url_route']['kwargs']['room_name']

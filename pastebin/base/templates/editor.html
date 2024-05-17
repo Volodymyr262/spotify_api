@@ -12,6 +12,7 @@
 </head>
 <body>
     <h1>Room: {{ room_name }}</h1>
+    <p>Share this link to invite others: <a href="{{ request.build_absolute_uri }}">{{ request.build_absolute_uri }}</a></p>
     <textarea id="editor"></textarea>
     <script>
         const roomName = "{{ room_name }}";
