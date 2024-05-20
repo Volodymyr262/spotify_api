@@ -1,7 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-from threading import Thread
-import asyncio
+
 
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
