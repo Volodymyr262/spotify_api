@@ -17,7 +17,6 @@
     <script>
         const roomName = "{{ room_name }}";
         const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
-
         const editor = document.getElementById('editor');
         let clientUpdate = false;
 
@@ -29,12 +28,28 @@
             clientUpdate = false;
         };
 
-        editor.addEventListener('input', () => {
-            clientUpdate = true;
+        // Debounce function
+        function debounce(func, delay) {
+            let timer;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // Send text to WebSocket server
+        function sendTextToServer(text) {
             ws.send(JSON.stringify({
-                'message': editor.value
+                'message': text
             }));
-        });
+        }
+
+        // Attach debounced input event listener
+        editor.addEventListener('input', debounce(function() {
+            clientUpdate = true;
+            sendTextToServer(editor.value);
+        }, 200));  // 200 milliseconds debounce delay
 
         ws.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');
