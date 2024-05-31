@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -68,11 +69,25 @@ TEMPLATES = [
         },
     },
 ]
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://:Dhrq1CbILaPjcVj8MVIUWL3qO8reVjl7@redis-16616.c262.us-east-1-3.ec2.redns.redis-cloud.com:16616/0',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis://:Dhrq1CbILaPjcVj8MVIUWL3qO8reVjl7@redis-16616.c262.us-east-1-3.ec2.redns.redis-cloud.com:16616/0')],
+        },
     },
 }
+
 
 WSGI_APPLICATION = 'pastebin.wsgi.application'
 
@@ -87,7 +102,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'text_editor',
         'USER': 'Volodymyr',
-        'PASSWORD': 'your_database_password',
+        'PASSWORD': 'yeb(177)lan',
         'HOST': 'localhost',  # Set to your database host, e.g., 'localhost' or '127.0.0.1'
         'PORT': '5432',  # Default PostgreSQL port
     }
