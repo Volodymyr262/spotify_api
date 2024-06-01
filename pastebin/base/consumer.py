@@ -1,8 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.core.cache import cache
-import time
-
+from asgiref.sync import sync_to_async
+from .models import Room
 
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -12,8 +11,8 @@ class WSConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
-        # Send the current state of the room to the new client
-        room_text = cache.get(self.room_group_name) or ""
+        # Retrieve the current state of the room from the database
+        room_text = await self.get_room_text(self.room_group_name)
         await self.send(text_data=json.dumps({
             'message': room_text
         }))
@@ -24,8 +23,8 @@ class WSConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         message = json.loads(text_data)['message']
 
-        # Save the message to Redis via Django cache
-        cache.set(self.room_group_name, message, timeout=None)
+        # Save the message to the database
+        await self.save_room_text(self.room_group_name, message)
 
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -40,3 +39,14 @@ class WSConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
+
+    @sync_to_async
+    def get_room_text(self, room_name):
+        room, created = Room.objects.get_or_create(name=room_name)
+        return room.text
+
+    @sync_to_async
+    def save_room_text(self, room_name, text):
+        room, created = Room.objects.get_or_create(name=room_name)
+        room.text = text
+        room.save()

@@ -49,7 +49,7 @@
         editor.addEventListener('input', debounce(function() {
             clientUpdate = true;
             sendTextToServer(editor.value);
-        }, 200));  // 200 milliseconds debounce delay
+        }, 300));  // 500 milliseconds debounce delay
 
         ws.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');
