@@ -12,11 +12,13 @@
 </head>
 <body>
     <h1>Room: {{ room_name }}</h1>
+    <p>Expires in 24h</p>
     <p>Share this link to invite others: <a href="{{ request.build_absolute_uri }}">{{ request.build_absolute_uri }}</a></p>
     <textarea id="editor"></textarea>
     <script>
         const roomName = "{{ room_name }}";
         const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
+
         const editor = document.getElementById('editor');
         let clientUpdate = false;
 
@@ -28,7 +30,6 @@
             clientUpdate = false;
         };
 
-        // Debounce function
         function debounce(func, delay) {
             let timer;
             return function(...args) {
@@ -38,18 +39,16 @@
             };
         }
 
-        // Send text to WebSocket server
         function sendTextToServer(text) {
             ws.send(JSON.stringify({
                 'message': text
             }));
         }
 
-        // Attach debounced input event listener
         editor.addEventListener('input', debounce(function() {
             clientUpdate = true;
             sendTextToServer(editor.value);
-        }, 300));  // 500 milliseconds debounce delay
+        }, 500));
 
         ws.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');

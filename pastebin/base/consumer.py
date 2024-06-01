@@ -1,36 +1,51 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from asgiref.sync import sync_to_async
+from django.core.cache import cache
 from .models import Room
+from asgiref.sync import sync_to_async
 
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'room_{self.room_name}'
 
-        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        # Join room group
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
         await self.accept()
 
-        # Retrieve the current state of the room from the database
-        room_text = await self.get_room_text(self.room_group_name)
+        # Send the current state of the room to the new client
+        room_text = cache.get(self.room_group_name) or ""
         await self.send(text_data=json.dumps({
             'message': room_text
         }))
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
 
-    async def receive(self, text_data=None, bytes_data=None):
-        message = json.loads(text_data)['message']
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        message = data['message']
 
-        # Save the message to the database
-        await self.save_room_text(self.room_group_name, message)
+        # Save the message to the database using sync_to_async
+        room, created = await sync_to_async(Room.objects.get_or_create)(name=self.room_name)
+        room.text = message
+        await sync_to_async(room.save)()
 
+        # Save the message to the cache
+        cache.set(self.room_group_name, message, timeout=None)
+
+        # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message,
+                'message': message
             }
         )
 
@@ -39,14 +54,3 @@ class WSConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message
         }))
-
-    @sync_to_async
-    def get_room_text(self, room_name):
-        room, created = Room.objects.get_or_create(name=room_name)
-        return room.text
-
-    @sync_to_async
-    def save_room_text(self, room_name, text):
-        room, created = Room.objects.get_or_create(name=room_name)
-        room.text = text
-        room.save()
