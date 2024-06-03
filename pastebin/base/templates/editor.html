@@ -1,58 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
+    {% load static %}
     <title>{{ created_at }}</title>
-    <style>
-        textarea {
-            width: 100%;
-            height: 90vh;
-            font-size: 16px;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/editor.css' %}">
 </head>
 <body>
     <h1>Room: {{ room_name }}</h1>
-    <p>Expires in 24h, created at:{{ created_at }}</p>
+    <p>Expires in 24h, created at: {{ created_at }}</p>
     <p>Share this link to invite others: <a href="{{ request.build_absolute_uri }}">{{ request.build_absolute_uri }}</a></p>
-    <textarea id="editor"></textarea>
+    <div class="editor-container">
+        <div class="line-numbers" id="line-numbers"></div>
+        <textarea id="editor" class="editor-textarea"></textarea>
+    </div>
     <script>
         const roomName = "{{ room_name }}";
-        const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
-
-        const editor = document.getElementById('editor');
-        let clientUpdate = false;
-
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            if (!clientUpdate) {
-                editor.value = data.message;
-            }
-            clientUpdate = false;
-        };
-
-        function debounce(func, delay) {
-            let timer;
-            return function(...args) {
-                const context = this;
-                clearTimeout(timer);
-                timer = setTimeout(() => func.apply(context, args), delay);
-            };
-        }
-
-        function sendTextToServer(text) {
-            ws.send(JSON.stringify({
-                'message': text
-            }));
-        }
-
-        editor.addEventListener('input', debounce(function() {
-            clientUpdate = true;
-            sendTextToServer(editor.value);
-        }, 500));
-
-        ws.onclose = function(event) {
-            console.error('Chat socket closed unexpectedly');
-        };
+        const wsURL = 'ws://' + window.location.host + '/ws/' + roomName + '/';
     </script>
+    <script src="{% static 'js/editor.js' %}"></script>
 </body>
 </html>
