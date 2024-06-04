@@ -4,6 +4,7 @@ from django.core.cache import cache
 from .models import Room
 from asgiref.sync import sync_to_async
 
+
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']

@@ -41,7 +41,7 @@ editor.addEventListener('input', debounce(function() {
     clientUpdate = true;
     sendTextToServer(editor.value);
     updateLineNumbers();
-}, 300));
+}, 250));
 
 ws.onclose = function(event) {
     console.error('Chat socket closed unexpectedly');
