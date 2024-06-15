@@ -1,19 +1,15 @@
+# models.py
 from django.db import models
-import random
-import string
-
+import shortuuid
 
 class Room(models.Model):
-    room_id = models.CharField(max_length=8, primary_key=True, unique=True)
-
-    def generate_unique_id(self):
-        characters = string.ascii_letters + string.digits
-        while True:
-            room_id = ''.join(random.choice(characters) for _ in range(8))
-            if not Room.objects.filter(room_id=room_id).exists():
-                return room_id
+    room_id = models.CharField(max_length=22, primary_key=True, unique=True, editable=False)  # shortuuid length is 22
 
     def save(self, *args, **kwargs):
         if not self.room_id:
-            self.room_id = self.generate_unique_id()
+            self.room_id = shortuuid.ShortUUID().random(length=6)
         super().save(*args, **kwargs)
+
+class TextSnippet(models.Model):
+    room = models.OneToOneField(Room, on_delete=models.CASCADE)
+    text = models.TextField(default="")
