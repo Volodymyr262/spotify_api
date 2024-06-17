@@ -1,22 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    {% load static %}
-    <title>{{ created_at }}</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/editor.css' %}">
+    <title>Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
+    <style>
+        .CodeMirror {
+            height: 90vh;
+        }
+    </style>
 </head>
 <body>
     <h1>Room: {{ room_name }}</h1>
-    <p>Expires in 24h, created at: {{ created_at }}</p>
-    <p>Share this link to invite others: <a href="{{ request.build_absolute_uri }}">{{ request.build_absolute_uri }}</a></p>
-    <div class="editor-container">
-        <div class="line-numbers" id="line-numbers"></div>
-        <textarea id="editor" class="editor-textarea"></textarea>
-    </div>
+    <textarea id="editor"></textarea>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
     <script>
         const roomName = "{{ room_name }}";
-        const wsURL = 'ws://' + window.location.host + '/ws/' + roomName + '/';
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
+
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: "python",
+            theme: "monokai",
+            lineNumbers: true
+        });
+
+        let ignoreChange = false;
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            ignoreChange = true;
+            const cursor = editor.getCursor();
+            editor.setValue(data.message);
+            editor.setCursor(cursor);
+            ignoreChange = false;
+        };
+
+        editor.on('change', () => {
+            if (!ignoreChange) {
+                ws.send(JSON.stringify({
+                    'message': editor.getValue()
+                }));
+            }
+        });
+
+        ws.onclose = function(event) {
+            console.error('Chat socket closed unexpectedly');
+        };
     </script>
-    <script src="{% static 'js/editor.js' %}"></script>
 </body>
 </html>

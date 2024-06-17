@@ -1,14 +1,14 @@
 from django.db import models
-from django.utils import timezone
-
+import shortuuid
 
 class Room(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    text = models.TextField(default='')
-    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set the field to now when the object is first created.
+    room_id = models.CharField(max_length=22, primary_key=True, unique=True, editable=False)  # shortuuid length is 22
 
-    def __str__(self):
-        return self.name
+    def save(self, *args, **kwargs):
+        if not self.room_id:
+            self.room_id = shortuuid.ShortUUID().random(length=6)
+        super().save(*args, **kwargs)
 
-    def is_expired(self):
-        return timezone.now() > self.created_at + timezone.timedelta(days=1)
+class TextSnippet(models.Model):
+    room = models.OneToOneField(Room, on_delete=models.CASCADE)
+    text = models.TextField(default="")

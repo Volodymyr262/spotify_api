@@ -1,57 +1,59 @@
-import json
+# consumer.py
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.core.cache import cache
-from .models import Room
+import json
+from .models import Room, TextSnippet
 from asgiref.sync import sync_to_async
-
 
 class WSConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = f'room_{self.room_name}'
+        self.room_group_name = 'editor_%s' % self.room_name
 
         # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
         )
+
         await self.accept()
 
-        # Send the current state of the room to the new client
-        room_text = cache.get(self.room_group_name) or ""
+        # Load the latest text from the database
+        room, _ = await sync_to_async(Room.objects.get_or_create)(room_id=self.room_name)
+        text_snippet, _ = await sync_to_async(TextSnippet.objects.get_or_create)(room=room)
         await self.send(text_data=json.dumps({
-            'message': room_text
+            'message': text_snippet.text
         }))
 
     async def disconnect(self, close_code):
+        # Leave room group
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data['message']
+        text_data_json = json.loads(text_data)
+        message = text_data_json['message']
 
-        # Save the message to the database using sync_to_async
-        room, created = await sync_to_async(Room.objects.get_or_create)(name=self.room_name)
-        room.text = message
-        await sync_to_async(room.save)()
-
-        # Save the message to the cache
-        cache.set(self.room_group_name, message, timeout=None)
+        # Save the text to the database
+        room = await sync_to_async(Room.objects.get)(room_id=self.room_name)
+        text_snippet, _ = await sync_to_async(TextSnippet.objects.get_or_create)(room=room)
+        text_snippet.text = message
+        await sync_to_async(text_snippet.save)()
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'chat_message',
+                'type': 'editor_message',
                 'message': message
             }
         )
 
-    async def chat_message(self, event):
+    async def editor_message(self, event):
         message = event['message']
+
+        # Send message to WebSocket
         await self.send(text_data=json.dumps({
             'message': message
         }))
