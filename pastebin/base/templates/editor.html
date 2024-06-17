@@ -8,10 +8,15 @@
         .CodeMirror {
             height: 90vh;
         }
+        .toolbar {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Room: {{ room_name }}</h1>
+    <div class="toolbar">
+        <h1>Room: {{ room_name }} <button id="download-button">Download as .txt</button></h1>
+    </div>
     <textarea id="editor"></textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
@@ -47,6 +52,30 @@
         ws.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');
         };
+
+        document.getElementById('download-button').addEventListener('click', function() {
+            const textToWrite = editor.getValue();
+            const textFileAsBlob = new Blob([textToWrite], { type: 'text/plain' });
+            const fileNameToSaveAs = "editor_content.txt";
+
+            const downloadLink = document.createElement("a");
+            downloadLink.download = fileNameToSaveAs;
+            downloadLink.innerHTML = "Download File";
+            if (window.webkitURL != null) {
+                downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob);
+            } else {
+                downloadLink.href = window.URL.createObjectURL(textFileAsBlob);
+                downloadLink.onclick = destroyClickedElement;
+                downloadLink.style.display = "none";
+                document.body.appendChild(downloadLink);
+            }
+
+            downloadLink.click();
+        });
+
+        function destroyClickedElement(event) {
+            document.body.removeChild(event.target);
+        }
     </script>
 </body>
 </html>
