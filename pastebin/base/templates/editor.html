@@ -2,37 +2,46 @@
 <html>
 <head>
     <title>Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
     <style>
-        textarea {
-            width: 100%;
+        .CodeMirror {
             height: 90vh;
-            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <h1>Room: {{ room_name }}</h1>
     <textarea id="editor"></textarea>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
     <script>
         const roomName = "{{ room_name }}";
         const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
 
-        const editor = document.getElementById('editor');
-        let clientUpdate = false;
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: "python",
+            theme: "monokai",
+            lineNumbers: true
+        });
+
+        let ignoreChange = false;
 
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            if (!clientUpdate) {
-                editor.value = data.message;
-            }
-            clientUpdate = false;
+            ignoreChange = true;
+            const cursor = editor.getCursor();
+            editor.setValue(data.message);
+            editor.setCursor(cursor);
+            ignoreChange = false;
         };
 
-        editor.addEventListener('input', () => {
-            clientUpdate = true;
-            ws.send(JSON.stringify({
-                'message': editor.value
-            }));
+        editor.on('change', () => {
+            if (!ignoreChange) {
+                ws.send(JSON.stringify({
+                    'message': editor.getValue()
+                }));
+            }
         });
 
         ws.onclose = function(event) {
