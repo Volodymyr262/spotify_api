@@ -5,22 +5,19 @@
     <title>Editor</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
-    <style>
-        .CodeMirror {
-            height: 90vh;
-        }
-        .toolbar {
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'styles/editor.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/toolbar.css' %}">
+
 </head>
 <body>
     <div class="toolbar">
-        <h1>Room: {{ room_name }} <button id="download-button">Download as .txt</button></h1>
+        <h1>Room: {{ room_name }}</h1>
+        <button id="download-button" class="button-12">Download as .txt</button>
     </div>
     <textarea id="editor"></textarea>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+
     <script>
         const roomName = "{{ room_name }}";
         const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
