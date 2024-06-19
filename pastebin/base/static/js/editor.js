@@ -21,3 +21,4 @@ document.getElementById('download-button').addEventListener('click', function() 
         function destroyClickedElement(event) {
             document.body.removeChild(event.target);
         }
+

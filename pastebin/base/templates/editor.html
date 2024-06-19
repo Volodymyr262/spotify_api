@@ -7,14 +7,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/monokai.min.css">
     <link rel="stylesheet" href="{% static 'styles/editor.css' %}">
     <link rel="stylesheet" href="{% static 'styles/toolbar.css' %}">
-
 </head>
 <body>
     <div class="toolbar">
         <h1>Room: {{ room_name }}</h1>
+        <button id="copy-button" class ="button-12" onclick="CopyLink()">Copy room link</button>
         <button id="download-button" class="button-12">Download as .txt</button>
     </div>
     <textarea id="editor"></textarea>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
 
@@ -51,8 +52,19 @@
             console.error('Chat socket closed unexpectedly');
         };
 
+    function CopyLink() {
+    // Get the current URL
+    var copyText = window.location.href;
 
+    // Copy the text inside the text field
+    navigator.clipboard.writeText(copyText).then(() => {
+        // Alert the copied text
+        alert("Copied the URL: " + copyText);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
+};
     </script>
-<script src="{% static 'js/editor.js' %}"></script>
+ <script src="{% static 'js/editor.js' %}"></script>
 </body>
 </html>
