@@ -21,8 +21,10 @@
 
     <script>
         const roomName = "{{ room_name }}";
+        // Create a new WebSocket connection to the specified room
         const ws = new WebSocket('ws://' + window.location.host + '/ws/' + roomName + '/');
 
+        // Initialize the CodeMirror editor with Python mode and Monokai theme
         const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
             mode: "python",
             theme: "monokai",
@@ -31,15 +33,18 @@
 
         let ignoreChange = false;
 
+        // Handle incoming WebSocket messages
         ws.onmessage = function(event) {
             const data = JSON.parse(event.data);
             ignoreChange = true;
             const cursor = editor.getCursor();
+            // Update the editor content with the received message
             editor.setValue(data.message);
             editor.setCursor(cursor);
             ignoreChange = false;
         };
 
+        // Send editor content over WebSocket when it changes
         editor.on('change', () => {
             if (!ignoreChange) {
                 ws.send(JSON.stringify({
@@ -48,22 +53,22 @@
             }
         });
 
+        // Handle WebSocket closure
         ws.onclose = function(event) {
             console.error('Chat socket closed unexpectedly');
         };
 
+    // Function to copy the current URL to the clipboard
     function CopyLink() {
-    // Get the current URL
-    var copyText = window.location.href;
+        var copyText = window.location.href;
 
-    // Copy the text inside the text field
-    navigator.clipboard.writeText(copyText).then(() => {
-        // Alert the copied text
-        alert("Copied the URL: " + copyText);
-    }).catch(err => {
-        console.error('Failed to copy: ', err);
-    });
-};
+        // Copy the text to the clipboard and show an alert
+        navigator.clipboard.writeText(copyText).then(() => {
+            alert("Copied the URL: " + copyText);
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    };
     </script>
  <script src="{% static 'js/editor.js' %}"></script>
 </body>
