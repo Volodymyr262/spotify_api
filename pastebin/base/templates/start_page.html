@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeShare</title>
+    <link rel="stylesheet" href="{% static 'styles/start_page.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CodeTogether</h1>
+            <p>Code together in python in Real-time </p>
+            <p>An online code editor for interviews, troubleshooting, teaching & more...</p>
+        </header>
+        <main>
+            <button onclick="window.location.href='{% url 'home' %}'">Share Coding</button>
+            <p>(Now provides syntax highlight only for Python)</p>
+        </main>
+    </div>
+</body>
+</html>

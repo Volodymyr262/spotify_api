@@ -1,11 +1,17 @@
 from django.shortcuts import render, redirect
 from .models import Room, TextSnippet
 
+
+def start_page(request):
+    return render(request, 'start_page.html')
+
+
 def home(request):
     # Generate a new room with a unique 6-character ID
     new_room = Room()
     new_room.save()
     return redirect('editor', room_name=new_room.room_id)
+
 
 def editor(request, room_name):
     room, created = Room.objects.get_or_create(room_id=room_name)
