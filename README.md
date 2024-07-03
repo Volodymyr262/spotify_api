@@ -1,8 +1,9 @@
 ![screenshot](CodeTogether/base/static/img/logo.png)
-## Project Information
 
 ### Overview
+
 ![gif](CodeTogether/base/static/gifs/editor.gif)
+
 ### Use Cases
 
 - **Pair Programming**: Allows two developers to work on the same codebase simultaneously.
@@ -27,9 +28,9 @@
    cd real-time-code-editor ```
 2. **Create a Virtual Environment**
 
-  ```bash
-  python -m venv venv
-  ```
+   ```bash
+   python -m venv venv
+   ```
 3. **Activate the Virtual Environment**
    **For Windows**
    
@@ -38,7 +39,26 @@
    ```
 
    **For MacOS/Linux**
+   ```bash
+   source venv/bin/activate
+   ```
+4. **Install the Required Libraries**
 
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Apply Database Migrations**
+
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
+6. **Run the Development Server**
+
+   ```bash
+   python manage.py runserver
+   ```
 
 
 
