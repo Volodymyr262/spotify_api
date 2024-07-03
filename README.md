@@ -32,6 +32,7 @@
    python -m venv venv
    ```
 3. **Activate the Virtual Environment**
+   
    **For Windows**
    
    ```bash
@@ -42,19 +43,19 @@
    ```bash
    source venv/bin/activate
    ```
-4. **Install the Required Libraries**
+5. **Install the Required Libraries**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-5. **Apply Database Migrations**
+6. **Apply Database Migrations**
 
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
-6. **Run the Development Server**
+7. **Run the Development Server**
 
    ```bash
    python manage.py runserver
